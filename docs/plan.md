@@ -17,9 +17,9 @@
 - Pydantic v2 (request/response validation)
 
 **Frontend:**
-- Vanilla JavaScript (no framework bloat, portfolio simplicity)
-- Chart.js 4.x (visualizations)
-- Modern CSS with Grid/Flexbox (no Tailwind/Bootstrap)
+- React 18 + Vite (component-based, modern build tooling)
+- Tailwind CSS + shadcn/ui (professional UI components)
+- react-chartjs-2 (Chart.js React wrapper for visualizations)
 
 **Deployment:**
 - Render free tier (Web Service)
@@ -30,13 +30,13 @@
 
 ```
 ┌─────────────────────────────────────────────┐
-│  Browser (Frontend)                         │
+│  Browser (Frontend — React SPA)             │
 │  ┌─────────────────────────────────────┐   │
-│  │ index.html + app.js + styles.css    │   │
-│  │ ├─ Filter Panel (skills multi-select)│  │
-│  │ ├─ Results Table (client pagination) │   │
-│  │ ├─ Charts (Chart.js)                 │   │
-│  │ └─ Download Excel button             │   │
+│  │ React 18 + Vite (build → dist/)      │   │
+│  │ ├─ FilterPanel (skills multi-select) │   │
+│  │ ├─ ResultsTable (client pagination)  │   │
+│  │ ├─ Charts (react-chartjs-2)          │   │
+│  │ └─ ExportButton                      │   │
 │  └─────────────────────────────────────┘   │
 └──────────────┬──────────────────────────────┘
                │ AJAX
@@ -175,24 +175,31 @@ python -c "import openpyxl; print(openpyxl.load_workbook('test.xlsx').sheetnames
 ### Module 6: Frontend Structure (`frontend/`)
 
 **Files:**
-- `index.html` — Single-page layout (filter panel, results table, charts, download button)
-- `styles.css` — Modern grid-based layout, no framework
-- `app.js` — Main logic (API calls, pagination, Chart.js rendering)
+- `index.html` — Vite entry point
+- `src/main.jsx` — React app bootstrap
+- `src/App.jsx` — Root component (layout, state management)
+- `src/components/FilterPanel.jsx` — Filter form with skill multi-select
+- `src/components/ResultsTable.jsx` — Table with client-side pagination
+- `src/components/ExportButton.jsx` — Excel download trigger
+- `src/api.js` — API client (fetch wrappers for /api/jobs, /api/search, /api/export)
+- `tailwind.config.js` + `vite.config.js` — Build config
 
 **Responsibilities:**
-- Skill tag multi-select with fuzzy search (use `<datalist>` + JS filter)
-- Results table with client-side pagination (20/page default)
-- Chart.js bar chart (Top 10 skills) + histogram (budget bins)
+- Skill tag multi-select with fuzzy search (shadcn/ui Combobox component)
+- Results table with client-side pagination (20/page default, shadcn/ui Table + Pagination)
+- Manage app state with React hooks (useState for results cache, filters, pagination)
 - Download Excel button → triggers `/api/export` with current filters
 
 **Verification:**
 ```bash
+# Dev mode:
+cd frontend && npm run dev
 # Manual browser test:
-# 1. Open http://localhost:8000/ → page loads
-# 2. Type "scra" in skills input → sees "Web Scraping", "Scrapy"
+# 1. Open http://localhost:5173/ → page loads
+# 2. Type "scra" in skills combobox → sees "Web Scraping", "Scrapy"
 # 3. Select both → chips appear
 # 4. Click Search → table populates
-# 5. Click page 2 → no network request, table updates
+# 5. Click page 2 → no network request (client-side pagination), table updates
 # 6. Click Download Excel → file downloads
 ```
 
@@ -200,21 +207,22 @@ python -c "import openpyxl; print(openpyxl.load_workbook('test.xlsx').sheetnames
 
 ---
 
-### Module 7: Chart.js Integration (`frontend/charts.js`)
+### Module 7: Chart Integration (`frontend/src/components/Charts.jsx`)
 
 **Responsibilities:**
-- Render Top 10 skills bar chart
-- Render budget distribution histogram
-- Update charts when search results change
+- `SkillsBarChart.jsx` — Top 10 skills bar chart (react-chartjs-2 `<Bar>`)
+- `BudgetHistogram.jsx` — Budget distribution histogram (react-chartjs-2 `<Bar>`)
+- Charts re-render reactively when result data (props) changes
 
 **Verification:**
-```javascript
-// Browser console:
-console.log(window.skillsChart.data.datasets[0].data);
-// Expected: [85, 42, 38, ...] (10 numbers)
+```bash
+# Manual browser test:
+# 1. Search "python" → bar chart shows top 10 skills
+# 2. React DevTools → inspect SkillsBarChart props.data → array of 10 numbers
+# 3. Budget histogram shows 5 bins with correct counts
 ```
 
-**Dependencies:** Module 6 (needs DOM structure)
+**Dependencies:** Module 6 (needs React component tree + result data)
 
 ---
 
@@ -223,18 +231,23 @@ console.log(window.skillsChart.data.datasets[0].data);
 **Files:**
 - `render.yaml` — Render service config (build command, start command)
 - `requirements.txt` — Python dependencies
-- `.gitignore` — Exclude `__pycache__`, `.pytest_cache`, `*.xlsx`
+- `frontend/package.json` — Node dependencies (react, vite, tailwindcss, react-chartjs-2)
+- `.gitignore` — Exclude `__pycache__`, `.pytest_cache`, `*.xlsx`, `node_modules`, `frontend/dist`
 - `README.md` — Setup instructions, API docs, portfolio showcase
 
 **Responsibilities:**
-- Define build: `pip install -r requirements.txt`
+- Build frontend: `cd frontend && npm install && npm run build` → outputs `frontend/dist/`
+- FastAPI mounts `frontend/dist/` as static files (SPA fallback to `index.html`)
+- Define Render build: `cd frontend && npm install && npm run build && cd .. && pip install -r requirements.txt`
 - Define start: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
 - Environment variables: `FREELANCER_API_BASE_URL=https://www.freelancer.com`
 
 **Verification:**
 ```bash
 # Local test:
+cd frontend && npm run build && cd ..
 PORT=8000 uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+# Open http://localhost:8000/ → serves built React app
 # Then deploy to Render, check public URL
 ```
 
@@ -262,8 +275,8 @@ PORT=8000 uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 ---
 
 ### Phase 3: Frontend (Day 4-5)
-6. ✅ Module 6: Frontend Structure — HTML/CSS/JS, skill selector, table, pagination
-7. ✅ Module 7: Chart.js Integration — visualizations
+6. ✅ Module 6: Frontend Structure — React + Vite + shadcn/ui, skill selector, table, pagination
+7. ✅ Module 7: Chart Integration — react-chartjs-2 visualizations
 
 **Milestone:** Full-stack app working locally.
 
@@ -319,7 +332,8 @@ Module 8 (Deployment)
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | Freelancer API rate limit hit during dev | High | Use cached responses in tests, implement exponential backoff |
-| Chart.js bundle size affects Render cold start | Medium | Use CDN for Chart.js, minify app.js |
+| React bundle size affects Render cold start | Medium | Vite production build with tree-shaking + code splitting; lazy-load charts |
+| Node build step increases Render deploy time | Medium | Cache node_modules; commit lockfile for reproducible builds |
 | Excel generation slow for 500+ results | Low | Use streaming response if >200 results |
 | CORS issues on deployed Render URL | Medium | Configure CORS middleware in FastAPI to allow all origins |
 

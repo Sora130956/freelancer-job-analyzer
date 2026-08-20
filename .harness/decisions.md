@@ -24,3 +24,16 @@
   - **选 Freelancer.com**：官方免费 API，budget 必填（薪资数据全）、offset/limit 翻页（不限条数）、接单市场开发项目多、支持关键词/技能/预算过滤——逐条解决 RemoteOK 三痛点；且与 Upwork 同为接单市场，分析结论有迁移价值。
   - **产出物选 CLI + Excel 而非 Web 看板**：贴近 Upwork 爬虫单最常见交付形态，范围最小；图表/看板留作迭代。
 - **影响**：项目从"HTML 反爬型爬虫"转为"API 集成 + 数据清洗 + Excel 交付"管道；需注册 Freelancer.com 开发者应用走 OAuth；作品集展示面偏数据管道能力，后续迭代 PeoplePerHour 可补 HTML 解析展示面。
+
+---
+
+## D-002：前端选 React（Vite + Tailwind + shadcn/ui + react-chartjs-2），而非原生 JS
+
+- **日期**：2026-08-20
+- **状态**：已接受
+- **背景**：产出物从 CLI + Excel 升级为"Web 界面 + Excel 导出"。第 4 步整体设计时，最初在 plan 中推荐原生 JS（HTML/CSS/JS + Chart.js CDN），理由是加载快、直接展示 JS 功力、代码直观、无构建链。用户反馈提出三点诉求：以后想走全栈、之前公司前端用的就是 React 想借机会学、担心纯 JS+CSS 不够好看。
+- **决策**：前端改用 **React 18 + Vite + Tailwind CSS + shadcn/ui + react-chartjs-2**。FastAPI 挂载 `frontend/dist/` 作为静态文件（SPA fallback），Render 构建链前置 `cd frontend && npm install && npm run build`。
+- **理由**（为什么不选备选方案）：
+  - **不选原生 JS**：虽然零构建、加载快，但不匹配用户"全栈转型 + 学 React"的职业诉求；纯 JS+CSS 手写现代 UI 成本高、观感难保证。
+  - **选 React**：契合目标岗位技术栈（公司在用），作品集体现前后端集成能力；Vite 构建快、开发体验好；**shadcn/ui** 提供复制粘贴式、Tailwind 驱动的现代组件（Combobox/Table/Pagination），非 npm 黑盒依赖，快速搭出专业外观解决"好看"问题；react-chartjs-2 以声明式 props 驱动图表，随数据响应式重渲染。
+- **影响**：引入 Node 构建步骤，Render 部署时间增加（需缓存 node_modules + 提交 lockfile）；打包体积影响冷启动（用 tree-shaking + 代码分割 + 图表懒加载缓解）；开发本地需 `npm run dev`（localhost:5173）与后端 `uvicorn`（localhost:8000）双端；模块 6/7/8 结构相应调整（见 plan 模块 6 React 组件清单、模块 7 react-chartjs-2、模块 8 Node 构建链）。

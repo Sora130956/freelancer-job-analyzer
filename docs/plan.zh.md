@@ -17,9 +17,9 @@
 - Pydantic v2（请求/响应验证）
 
 **前端：**
-- 原生 JavaScript（无框架依赖，作品集展示简洁）
-- Chart.js 4.x（可视化）
-- 现代 CSS Grid/Flexbox（无 Tailwind/Bootstrap）
+- React 18 + Vite（组件化，现代构建工具）
+- Tailwind CSS + shadcn/ui（专业 UI 组件）
+- react-chartjs-2（Chart.js 的 React 封装，用于可视化）
 
 **部署：**
 - Render 免费套餐（Web Service）
@@ -30,13 +30,13 @@
 
 ```
 ┌─────────────────────────────────────────────┐
-│  浏览器（前端）                              │
+│  浏览器（前端 — React SPA）                 │
 │  ┌─────────────────────────────────────┐   │
-│  │ index.html + app.js + styles.css    │   │
-│  │ ├─ 筛选面板（技能多选）              │   │
-│  │ ├─ 结果表格（客户端分页）            │   │
-│  │ ├─ 图表（Chart.js）                  │   │
-│  │ └─ 下载 Excel 按钮                   │   │
+│  │ React 18 + Vite（构建 → dist/）      │   │
+│  │ ├─ FilterPanel（技能多选）           │   │
+│  │ ├─ ResultsTable（客户端分页）        │   │
+│  │ ├─ Charts（react-chartjs-2）         │   │
+│  │ └─ ExportButton（下载 Excel）        │   │
 │  └─────────────────────────────────────┘   │
 └──────────────┬──────────────────────────────┘
                │ AJAX
@@ -175,24 +175,31 @@ python -c "import openpyxl; print(openpyxl.load_workbook('test.xlsx').sheetnames
 ### 模块 6：前端结构（`frontend/`）
 
 **文件：**
-- `index.html` — 单页布局（筛选面板、结果表格、图表、下载按钮）
-- `styles.css` — 现代 Grid 布局，无框架
-- `app.js` — 主逻辑（API 调用、分页、Chart.js 渲染）
+- `index.html` — Vite 入口
+- `src/main.jsx` — React 应用引导
+- `src/App.jsx` — 根组件（布局、状态管理）
+- `src/components/FilterPanel.jsx` — 筛选表单 + 技能多选
+- `src/components/ResultsTable.jsx` — 表格 + 客户端分页
+- `src/components/ExportButton.jsx` — Excel 下载触发
+- `src/api.js` — API 客户端（封装 /api/jobs、/api/search、/api/export 的 fetch）
+- `tailwind.config.js` + `vite.config.js` — 构建配置
 
 **职责：**
-- 技能标签多选 + 模糊搜索（使用 `<datalist>` + JS 过滤）
-- 结果表格 + 客户端分页（默认 20 条/页）
-- Chart.js 柱状图（Top 10 技能）+ 直方图（预算区间）
+- 技能标签多选 + 模糊搜索（shadcn/ui Combobox 组件）
+- 结果表格 + 客户端分页（默认 20 条/页，shadcn/ui Table + Pagination）
+- 用 React hooks 管理应用状态（useState 缓存结果、筛选条件、分页）
 - 下载 Excel 按钮 → 触发 `/api/export`（携带当前筛选条件）
 
 **验证：**
 ```bash
+# 开发模式：
+cd frontend && npm run dev
 # 浏览器手工测试：
-# 1. 打开 http://localhost:8000/ → 页面加载
-# 2. 在技能输入框输入 "scra" → 看到 "Web Scraping"、"Scrapy"
+# 1. 打开 http://localhost:5173/ → 页面加载
+# 2. 在技能 combobox 输入 "scra" → 看到 "Web Scraping"、"Scrapy"
 # 3. 选中两个 → 芯片出现
 # 4. 点击搜索 → 表格填充
-# 5. 点击第 2 页 → 无网络请求，表格更新
+# 5. 点击第 2 页 → 无网络请求（客户端分页），表格更新
 # 6. 点击下载 Excel → 文件下载
 ```
 
@@ -200,21 +207,22 @@ python -c "import openpyxl; print(openpyxl.load_workbook('test.xlsx').sheetnames
 
 ---
 
-### 模块 7：Chart.js 集成（`frontend/charts.js`）
+### 模块 7：图表集成（`frontend/src/components/Charts.jsx`）
 
 **职责：**
-- 渲染 Top 10 技能柱状图
-- 渲染预算分布直方图
-- 搜索结果变化时更新图表
+- `SkillsBarChart.jsx` — Top 10 技能柱状图（react-chartjs-2 `<Bar>`）
+- `BudgetHistogram.jsx` — 预算分布直方图（react-chartjs-2 `<Bar>`）
+- 当结果数据（props）变化时，图表响应式重新渲染
 
 **验证：**
-```javascript
-// 浏览器控制台：
-console.log(window.skillsChart.data.datasets[0].data);
-// 预期：[85, 42, 38, ...] （10 个数字）
+```bash
+# 浏览器手工测试：
+# 1. 搜索 "python" → 柱状图显示 Top 10 技能
+# 2. React DevTools → 查看 SkillsBarChart 的 props.data → 10 个数字的数组
+# 3. 预算直方图显示 5 个分桶及正确计数
 ```
 
-**依赖：** 模块 6（需要 DOM 结构）
+**依赖：** 模块 6（需要 React 组件树 + 结果数据）
 
 ---
 
@@ -223,18 +231,23 @@ console.log(window.skillsChart.data.datasets[0].data);
 **文件：**
 - `render.yaml` — Render 服务配置（构建命令、启动命令）
 - `requirements.txt` — Python 依赖
-- `.gitignore` — 排除 `__pycache__`、`.pytest_cache`、`*.xlsx`
+- `frontend/package.json` — Node 依赖（react、vite、tailwindcss、react-chartjs-2）
+- `.gitignore` — 排除 `__pycache__`、`.pytest_cache`、`*.xlsx`、`node_modules`、`frontend/dist`
 - `README.md` — 安装说明、API 文档、作品集展示
 
 **职责：**
-- 定义构建：`pip install -r requirements.txt`
+- 构建前端：`cd frontend && npm install && npm run build` → 输出 `frontend/dist/`
+- FastAPI 挂载 `frontend/dist/` 作为静态文件（SPA fallback 到 `index.html`）
+- 定义 Render 构建：`cd frontend && npm install && npm run build && cd .. && pip install -r requirements.txt`
 - 定义启动：`uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
 - 环境变量：`FREELANCER_API_BASE_URL=https://www.freelancer.com`
 
 **验证：**
 ```bash
 # 本地测试：
+cd frontend && npm run build && cd ..
 PORT=8000 uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+# 打开 http://localhost:8000/ → 提供构建后的 React 应用
 # 然后部署到 Render，检查公开 URL
 ```
 
@@ -262,8 +275,8 @@ PORT=8000 uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 ---
 
 ### 阶段 3：前端（第 4-5 天）
-6. ✅ 模块 6：前端结构 — HTML/CSS/JS、技能选择器、表格、分页
-7. ✅ 模块 7：Chart.js 集成 — 可视化
+6. ✅ 模块 6：前端结构 — React + Vite + shadcn/ui、技能选择器、表格、分页
+7. ✅ 模块 7：图表集成 — react-chartjs-2 可视化
 
 **里程碑：** 全栈应用本地运行正常。
 
@@ -319,7 +332,8 @@ PORT=8000 uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 | 风险 | 影响 | 应对措施 |
 |------|------|---------|
 | 开发过程中触发 Freelancer API 限流 | 高 | 测试使用缓存响应，实现指数退避 |
-| Chart.js 包体积影响 Render 冷启动 | 中 | Chart.js 使用 CDN，app.js 压缩 |
+| React 打包体积影响 Render 冷启动 | 中 | Vite 生产构建配合 tree-shaking + 代码分割；图表懒加载 |
+| Node 构建步骤增加 Render 部署时间 | 中 | 缓存 node_modules；提交 lockfile 保证可复现构建 |
 | 500+ 结果时 Excel 生成慢 | 低 | 超过 200 条使用流式响应 |
 | 部署到 Render 后 CORS 问题 | 中 | FastAPI CORS 中间件配置允许所有来源 |
 
