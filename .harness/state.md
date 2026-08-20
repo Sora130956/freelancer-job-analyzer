@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-第 2.5 步（需求打磨）—— 已完成详细设计，需求文档已落盘（`docs/requirements.zh.md` / `docs/requirements.en.md`），待用户确认后进入第 3 步写验收标准
+第 3 步（验收标准）—— 已完成验收标准文档（`docs/acceptance.md`），包含 6 条可量化可脚本验证的标准，待进入第 4 步可行性分析
 
 ## 需求一句话（Who / What / Why）
 
@@ -61,11 +61,16 @@
 - 中文版：`docs/requirements.zh.md`
 - 英文版：`docs/requirements.en.md`
 
+## 验收标准
+
+- 验收标准文档：`docs/acceptance.md`
+- 包含 6 条可量化标准：AC-001 API集成、AC-002 技能标签选择器、AC-003 客户端分页、AC-004 可视化、AC-005 Excel导出、AC-006 Render部署
+
 ## 下一步动作
 
-1. 用户确认需求文档（`docs/requirements.zh.md`）中的设计是否符合预期。
-2. 确认后进入第 3 步：基于需求文档写 `docs/acceptance.md` 验收标准（3–5 条可量化可脚本检查的标准）。
+1. 进入第 4 步：可行性分析与技术栈选型。
+2. 输出实现计划 `docs/plan.md`，拆解模块清单。
 
 ## 决策摘要
 
-- D-001：数据源选 Freelancer.com 官方 API，排除 Upwork/Guru/WWR；产出物定为 CLI + Excel 报表。详见 `.harness/decisions.md`。
+- D-001：数据源选 Freelancer.com 官方 API，排除 Upwork/Guru/WWR；产出物从 CLI 升级为 Web 应用。详见 `.harness/decisions.md`。
