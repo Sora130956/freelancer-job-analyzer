@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-第 4 步（整体设计 + 实现计划）—— 已完成 docs/plan.md，8 个模块拆分完成，待用户确认后进入第 5 步
+第 5 步（生成 → validate → review）—— 模块 1-4 已实现并通过单测，全量回归 38 passed；模块 4 待用户 review 确认后进入模块 5
 
 ## 需求一句话（Who / What / Why）
 
@@ -54,7 +54,14 @@
 
 ## 模块清单
 
-（第 4 步拆分后填写）
+- [x] 模块 1：后端基础（FastAPI 骨架 + /health）— 2 测试通过
+- [x] 模块 2：Freelancer API 客户端（`backend/services/api_client.py`）— 10 测试通过，commit b3480e7
+- [x] 模块 3：数据处理器（`backend/services/data_processor.py`）— 15 测试通过，commit 8b171e9
+- [x] 模块 4：Excel 生成器（`backend/services/excel_generator.py`）— 11 测试通过，待 review
+- [ ] 模块 5：API 路由（`backend/routes/`）
+- [ ] 模块 6：前端结构（React + Vite）
+- [ ] 模块 7：图表集成（react-chartjs-2）
+- [ ] 模块 8：部署配置（Render）
 
 ## 需求文档
 
@@ -68,7 +75,9 @@
 
 ## 下一步动作
 
-等待用户确认实现计划，确认后进入第 5 步：按计划分模块实现（TDD 模式）
+模块 4 已实现完成（TDD：先写 tests/test_excel_generator.py 见 ModuleNotFoundError，再实现，11 passed）。
+等待用户 review 确认，确认后进入模块 5：API 路由（/api/jobs、/api/search、/api/export）。
+遗留：study/python/06-模块3-data-processor.md 缺 ★2/★3/★4 三节（已口头讲完未落盘）。
 
 ## 决策摘要
 
