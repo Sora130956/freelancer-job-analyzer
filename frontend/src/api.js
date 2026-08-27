@@ -25,7 +25,7 @@ function buildParams(filters) {
 /** 拉取全量技能标签列表（GET /api/jobs）。返回 [{id, name}, ...]。 */
 export async function fetchJobs() {
   const res = await fetch('/api/jobs')
-  if (!res.ok) throw new Error(`加载技能标签失败：HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`Failed to load skills: HTTP ${res.status}`)
   return res.json()
 }
 
@@ -33,7 +33,7 @@ export async function fetchJobs() {
 export async function searchJobs(filters) {
   const qs = buildParams(filters)
   const res = await fetch(`/api/search?${qs}`)
-  if (!res.ok) throw new Error(`搜索失败：HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`Search failed: HTTP ${res.status}`)
   return res.json()
 }
 

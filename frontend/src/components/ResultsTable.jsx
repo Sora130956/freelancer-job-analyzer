@@ -13,19 +13,19 @@ function budgetRange(project) {
   const { budget_min_usd: min, budget_max_usd: max, type } = project
   const suffix = type === 'hourly' ? '/hr' : ''
   if (min == null && max == null) return '—'
-  if (max == null) return `${money(min)}${suffix} 起`
+  if (max == null) return `${money(min)}${suffix}+`
   if (min == null) return `≤ ${money(max)}${suffix}`
   return `${money(min)} – ${money(max)}${suffix}`
 }
 
-/** Unix 秒级时间戳 → 相对时间文案（"2 小时前"）。 */
+/** Unix 秒级时间戳 → 相对时间文案（"2h ago"）。 */
 function relativeTime(unixSeconds) {
   const diffMs = Date.now() - unixSeconds * 1000
   const minutes = Math.floor(diffMs / 60000)
-  if (minutes < 60) return `${Math.max(minutes, 0)} 分钟前`
+  if (minutes < 60) return `${Math.max(minutes, 0)}m ago`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} 小时前`
-  return `${Math.floor(hours / 24)} 天前`
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
 }
 
 /**
@@ -53,7 +53,7 @@ export default function ResultsTable({ projects }) {
   if (projects.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-        暂无结果，先在上方设置条件并点击搜索。
+        No results yet. Set your filters above and hit Search.
       </p>
     )
   }
@@ -63,10 +63,10 @@ export default function ResultsTable({ projects }) {
       {/* 摘要栏 + 每页条数 */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <span>
-          找到 <strong>{projects.length}</strong> 条，第 {safePage} 页 / 共 {totalPages} 页
+          <strong>{projects.length}</strong> projects found — page {safePage} of {totalPages}
         </span>
         <label className="flex items-center gap-2">
-          每页
+          Per page
           <select
             value={pageSize}
             onChange={(e) => {
@@ -89,13 +89,13 @@ export default function ResultsTable({ projects }) {
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
             <tr>
-              <th className="px-3 py-2">标题</th>
-              <th className="px-3 py-2">技能</th>
-              <th className="px-3 py-2">预算 (USD)</th>
-              <th className="px-3 py-2">竞标均价</th>
-              <th className="px-3 py-2">竞争数</th>
-              <th className="px-3 py-2">类型</th>
-              <th className="px-3 py-2">发布</th>
+              <th className="px-3 py-2">Title</th>
+              <th className="px-3 py-2">Skills</th>
+              <th className="px-3 py-2">Budget (USD)</th>
+              <th className="px-3 py-2">Avg bid</th>
+              <th className="px-3 py-2">Bids</th>
+              <th className="px-3 py-2">Type</th>
+              <th className="px-3 py-2">Posted</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
@@ -128,7 +128,7 @@ export default function ResultsTable({ projects }) {
                 <td className="px-3 py-2">{p.bid_stats?.bid_count ?? '—'}</td>
                 <td className="px-3 py-2">
                   <span className="rounded bg-gray-100 px-2 py-0.5 text-xs">
-                    {p.type === 'hourly' ? '时薪' : '固定价'}
+                    {p.type === 'hourly' ? 'Hourly' : 'Fixed'}
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-gray-500">

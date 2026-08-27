@@ -76,7 +76,7 @@ export default function App() {
               Freelancer Job Analyzer
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              按预算、技能与竞争度筛选 Freelancer.com 上的可投项目
+              Filter Freelancer.com projects by budget, skills and competition
             </p>
           </div>
           <ExportButton filters={filters} disabled={projects.length === 0} />

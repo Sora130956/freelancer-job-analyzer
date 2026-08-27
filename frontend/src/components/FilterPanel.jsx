@@ -2,11 +2,11 @@ import { useState } from 'react'
 
 // 时间范围选项：value 对应后端 time_range（小时），label 是界面文案。
 const TIME_RANGES = [
-  { value: '', label: '不限' },
-  { value: 24, label: '24 小时内' },
-  { value: 72, label: '3 天内' },
-  { value: 168, label: '7 天内' },
-  { value: 720, label: '30 天内' },
+  { value: '', label: 'Any time' },
+  { value: 24, label: 'Last 24 hours' },
+  { value: 72, label: 'Last 3 days' },
+  { value: 168, label: 'Last 7 days' },
+  { value: 720, label: 'Last 30 days' },
 ]
 
 // 结果条数选项：对应后端 limit，取值 10..500（这里只提供常用档位）。
@@ -59,33 +59,33 @@ export default function FilterPanel({ jobs, filters, onChange, onSearch, loading
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* 关键词 */}
         <label className="flex flex-col gap-1 text-sm">
-          <span>关键词</span>
+          <span>Keywords</span>
           <input
             type="text"
             value={filters.keywords}
             onChange={(e) => set('keywords', e.target.value)}
-            placeholder="例如 python"
+            placeholder="e.g. python"
             className="rounded border border-gray-300 px-3 py-2"
           />
         </label>
 
         {/* 项目类型 */}
         <label className="flex flex-col gap-1 text-sm">
-          <span>项目类型</span>
+          <span>Project type</span>
           <select
             value={filters.project_type}
             onChange={(e) => set('project_type', e.target.value)}
             className="rounded border border-gray-300 px-3 py-2"
           >
-            <option value="">全部</option>
-            <option value="fixed">固定价</option>
-            <option value="hourly">时薪</option>
+            <option value="">All</option>
+            <option value="fixed">Fixed price</option>
+            <option value="hourly">Hourly</option>
           </select>
         </label>
 
         {/* 发布时间 + 结果条数 */}
         <label className="flex flex-col gap-1 text-sm">
-          <span>发布时间</span>
+          <span>Posted within</span>
           <select
             value={filters.time_range ?? ''}
             onChange={(e) => set('time_range', Number(e.target.value) || null)}
@@ -101,7 +101,7 @@ export default function FilterPanel({ jobs, filters, onChange, onSearch, loading
 
         {/* 预算区间 */}
         <label className="flex flex-col gap-1 text-sm">
-          <span>预算下限 (USD)</span>
+          <span>Min budget (USD)</span>
           <input
             type="number"
             value={filters.budget_min ?? ''}
@@ -113,21 +113,21 @@ export default function FilterPanel({ jobs, filters, onChange, onSearch, loading
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span>预算上限 (USD)</span>
+          <span>Max budget (USD)</span>
           <input
             type="number"
             value={filters.budget_max ?? ''}
             onChange={(e) =>
               set('budget_max', e.target.value === '' ? null : Number(e.target.value))
             }
-            placeholder="无上限"
+            placeholder="No limit"
             className="rounded border border-gray-300 px-3 py-2"
           />
         </label>
 
         {/* 结果条数 */}
         <label className="flex flex-col gap-1 text-sm">
-          <span>结果条数</span>
+          <span>Result limit</span>
           <select
             value={filters.limit}
             onChange={(e) => set('limit', Number(e.target.value))}
@@ -144,7 +144,7 @@ export default function FilterPanel({ jobs, filters, onChange, onSearch, loading
 
       {/* 技能多选 */}
       <div className="mt-4 text-sm">
-        <span>技能标签</span>
+        <span>Skills</span>
 
         {/* 已选芯片 */}
         {selectedSkills.length > 0 && (
@@ -158,7 +158,7 @@ export default function FilterPanel({ jobs, filters, onChange, onSearch, loading
                 <button
                   type="button"
                   onClick={() => toggleSkill(job.id)}
-                  aria-label={`移除 ${job.name}`}
+                  aria-label={`Remove ${job.name}`}
                   className="text-blue-700 hover:text-blue-900"
                 >
                   ×
@@ -173,13 +173,13 @@ export default function FilterPanel({ jobs, filters, onChange, onSearch, loading
           type="text"
           value={skillQuery}
           onChange={(e) => setSkillQuery(e.target.value)}
-          placeholder="搜索标签… 例如 scra"
+          placeholder="Search skills… e.g. scra"
           className="mt-2 w-full rounded border border-gray-300 px-3 py-2"
         />
         {skillQuery && (
           <ul className="mt-1 max-h-40 overflow-y-auto rounded border border-gray-200 bg-white">
             {visibleSkills.length === 0 && (
-              <li className="px-3 py-2 text-gray-400">无匹配标签</li>
+              <li className="px-3 py-2 text-gray-400">No matching skills</li>
             )}
             {visibleSkills.map((job) => (
               <li key={job.id}>
@@ -205,7 +205,7 @@ export default function FilterPanel({ jobs, filters, onChange, onSearch, loading
         disabled={loading}
         className="mt-4 rounded bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? '搜索中…' : '搜索'}
+        {loading ? 'Searching…' : 'Search'}
       </button>
     </section>
   )

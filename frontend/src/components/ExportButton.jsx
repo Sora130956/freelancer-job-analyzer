@@ -16,7 +16,7 @@ export default function ExportButton({ filters, disabled }) {
       disabled={disabled}
       className="rounded border border-green-600 px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-50 disabled:opacity-40"
     >
-      下载 Excel
+      Download Excel
     </button>
   )
 }
