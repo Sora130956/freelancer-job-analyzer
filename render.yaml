@@ -1,0 +1,36 @@
+# Render Blueprint —— 单 Web Service 同端口托管 FastAPI + React 构建产物。
+#
+# 为什么不拆成 Static Site + Web Service 两个服务：
+# 后端已在 backend/main.py 里挂载 frontend/dist，同源省掉生产环境 CORS 配置，
+# 免费套餐也只需占用一个服务额度。
+#
+# 部署方式：Render Dashboard → New → Blueprint → 选中本仓库，自动读取此文件。
+services:
+  - type: web
+    name: freelancer-job-analyzer
+    runtime: python
+    plan: free
+    region: singapore
+
+    # 构建顺序有依赖：必须先 npm run build 产出 frontend/dist，
+    # 否则 uvicorn 启动时 FRONTEND_DIST 不存在，会降级成纯 API 模式（前端 404）。
+    buildCommand: |
+      pip install -r requirements.txt
+      cd frontend && npm ci && npm run build
+
+    # Render 通过 $PORT 注入端口，不能硬编码 8000。
+    # 免费套餐单实例，--workers 保持默认 1，避免内存超限被 OOM kill。
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+
+    # Render 用它判断实例是否存活；backend/main.py 已有 /health 路由。
+    healthCheckPath: /health
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # 与本地 .venv 保持一致的 Node 大版本，避免 Vite 6 在旧 Node 上构建失败。
+      - key: NODE_VERSION
+        value: "20.11.1"
+      # backend/config.py 里已有同名默认值，这里显式写出便于在 Dashboard 改指向。
+      - key: FREELANCER_API_BASE_URL
+        value: https://www.freelancer.com

@@ -61,7 +61,7 @@
 - [x] 模块 5：API 路由（`backend/routes/`）— 12 测试通过（test_routes.py），全量 59 passed
 - [x] 模块 6：前端结构（React + Vite）— 9 个文件，npm run build 通过，浏览器 6 步手工验证通过
 - [x] 模块 7：图表集成（react-chartjs-2）— npm run build 通过（37 modules），浏览器确认两图渲染且随结果响应式变化
-- [ ] 模块 8：部署配置（Render）
+- [x] 模块 8：部署配置（Render）— render.yaml / README.md / 静态托管 SPA fallback，61 passed，8010 单端口浏览器验证通过
 
 ## 需求文档
 
@@ -75,19 +75,23 @@
 
 ## 下一步动作
 
-模块 6、7 均已实现完成并验证。模块 7 具体证据：`npm run build` 通过（37 modules，较模块 6 的 31 多 6 个 chart.js 相关模块）；
-搜索 "python" 后页面出现两张 canvas（各 668×320，非透明像素 47623 / 98928，证明确实绘制而非空白），
-搜索结果截图可见 Top 10 技能柱状图（Python/JavaScript/Web Scraping/Data Mining/…）与预算分布直方图（<$50…$1000+ 5 桶）；
-换关键词 "logo design" 再搜索，两张图表数据随之变化（Top 10 变为 Logo Design/Adobe Illustrator/…，预算分布 5 桶计数重排）——响应式重渲染成立；
-console 无报错。后端 59 passed 未受影响。
+模块 8 已实现完成并验证。证据：
+- `npm run build` 通过（37 modules，dist/index.html 0.47 kB + assets/index-BS31nbux.js 299.62 kB）。
+- 后端新增静态托管：`backend/main.py` 挂载 `frontend/dist/assets`（StaticFiles，带 304 协商缓存）+ SPA catch-all fallback（`/{full_path:path}` 回 index.html，带目录穿越防护），dist 未 build 时降级为纯 API 模式并打 warning。
+- 全量 `pytest -q`：61 passed（新增 2 条 SPA 托管回归测试）。
+- 8010 单端口（模拟 Render 生产行为）浏览器验证：`/` 返回构建后 SPA、`/api/jobs` 3422 条、搜 "python" 返回 99 条 + 两张 canvas（各 668×320，非透明像素 47623 / 98928）完整渲染；截图可见 Top 10 技能柱状图与预算分布直方图。
+- 修了一个真实 bug：SPA catch-all 会把未知 `/api` 路径也回成 index.html（200 + HTML），导致前端 `fetch().json()` 解析报错——已加守卫让未匹配 `/api` 返回 404 JSON，并补测试锁定。
+- README.md 重写：安装说明 + 三接口 API 文档 + Render 部署要点 + 项目结构。
 
-待用户 commit 确认后进入模块 8：部署配置（Render）。
+已就绪可 deploy：`render.yaml`（Blueprint，单 web service、先 pip 后 npm build、`$PORT`、`/health` 健康检查、`PYTHON_VERSION`/`NODE_VERSION`/`FREELANCER_API_BASE_URL` 环境变量）、`requirements.txt`、`.gitignore`（含 `.venv/`）。
+
+待用户 commit 确认后：推 GitHub → Render Dashboard New Blueprint → 选定本仓库 → 自动构建启动。
 
 遗留：
 - study/python/09-模块6-frontend.md 未写（用户明确表示暂不学习前端部分，跳过）。
 - study/python/06-模块3-data-processor.md 缺 ★2/★3/★4 三节（已口头讲完未落盘）。
 - code review 待记录到 docs/review.md（尚未创建，模块 5、6 均未记录）。
-- 前端无自动化测试（未装 vitest），模块 7 靠浏览器手工验证；如需回归可在模块 8 前补。
+- 前端无自动化测试（未装 vitest），模块 7、8 靠浏览器手工验证。
 
 ## 决策摘要
 
@@ -99,3 +103,4 @@ console 无报错。后端 59 passed 未受影响。
 - D-006（模块 6）：不引入 shadcn/ui，技能多选与表格分页用原生 React 手写。理由：shadcn 需额外初始化（CLI、components.json、路径别名），对学习项目增加不必要的间接层；手写组件约 340 行、逻辑可直读。偏离 `docs/plan.zh.md` 模块 6 原定的 Combobox/Table/Pagination 方案。
 - D-007（模块 6）：Vite 配置 `server.proxy` 把 `/api` 转发到 `http://localhost:8000`，`api.js` 里全部写相对路径。理由：开发期免 CORS 预检往返，且与生产（模块 8 让 FastAPI 挂载 `frontend/dist` 后同源）行为一致，无需切换 base URL。
 - D-008（模块 7）：走 npm 安装 `react-chartjs-2@5.2.0` + `chart.js@4.4.7`（npmmirror 源规避 npmjs.org ECONNRESET）；图表组件里显式 `ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)`——chart.js v4 是 tree-shaking 的，未注册的 scale/element 会在运行时抛 "not a registered scale"。Top 10 切片在前端做（`Object.entries(...).slice(0,10)`），后端 `skills_frequency` 已降序返回；预算直方图不硬编码分桶、直接取后端 `budget_distribution` 的 label 顺序，避免两边分桶定义漂移（该 dict 由 `build_budget_distribution` 保证恒有 5 个区间）。空态口径与 ResultsTable 一致：无结果时整块图表区不渲染。
+- D-009（模块 8）：生产用单个 Render Web Service 同端口托管前后端，不拆 Static Site + Web Service。理由：backend/main.py 已挂载 `frontend/dist`，同源免生产 CORS 配置，免费套餐也只需一个服务额度。构建命令先 `pip install` 再 `cd frontend && npm ci && npm run build`（顺序有依赖——dist 必须先产出，否则启动时 FRONTEND_DIST 不存在而降级成纯 API 模式）。静态托管必须写在所有 API 路由注册之后（Starlette 按注册顺序匹配，先挂 `/{full_path:path}` 会盖住 /api 与 /health）。SPA catch-all 对未匹配的 `/api` 路径返回 404 JSON 而非回 index.html，避免前端 fetch 拿到 HTML 后 `.json()` 报解析错误。静态相关测试统一挂 `skipif(not FRONTEND_DIST.is_dir())`，保证 CI/纯后端环境未 build 前端时不报红。
