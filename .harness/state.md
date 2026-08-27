@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-第 5 步（生成 → validate → review）—— 模块 1-5 已实现并通过单测，全量回归 59 passed；模块 5 已 review，待进入模块 6
+第 5 步（生成 → validate → review）—— 后端模块 1-5 全量回归 59 passed；模块 6 前端已实现并通过浏览器 6 步手工验证，待进入模块 7
 
 ## 需求一句话（Who / What / Why）
 
@@ -59,7 +59,7 @@
 - [x] 模块 3：数据处理器（`backend/services/data_processor.py`）— 15 测试通过，commit 8b171e9
 - [x] 模块 4：Excel 生成器（`backend/services/excel_generator.py`）— 11 测试通过，commit 8b171e9
 - [x] 模块 5：API 路由（`backend/routes/`）— 12 测试通过（test_routes.py），全量 59 passed
-- [ ] 模块 6：前端结构（React + Vite）
+- [x] 模块 6：前端结构（React + Vite）— 9 个文件，npm run build 通过，浏览器 6 步手工验证通过
 - [ ] 模块 7：图表集成（react-chartjs-2）
 - [ ] 模块 8：部署配置（Render）
 
@@ -75,13 +75,16 @@
 
 ## 下一步动作
 
-模块 5 已实现完成（TDD：先写 tests/test_routes.py 见模块缺失，再实现，12 passed），全量回归 59 passed。
-待用户 commit 确认后进入模块 6：前端结构（React + Vite）。
+模块 6 已实现完成（frontend/ 9 个文件），`npm run build` 通过（31 modules），浏览器 6 步手工验证全部通过：
+页面加载填充 3422 个技能标签、"scra" 模糊匹配、选中出芯片、搜索返回 49 条 3 页每页 20、
+切第 2 页无新网络请求（客户端分页成立）、`GET /api/export` 返回 200、刷新走 sessionStorage 缓存不重复请求。
+后端未改动，59 passed 仍有效。待用户 commit 确认后进入模块 7：图表集成（react-chartjs-2）。
 
 遗留：
-- study/python/08-模块5-api-routes.md 已落盘（讲解走 guided-code-walkthrough）。
+- study/python/09-模块6-frontend.md 未写（用户明确表示暂不学习前端部分，跳过）。
 - study/python/06-模块3-data-processor.md 缺 ★2/★3/★4 三节（已口头讲完未落盘）。
-- code review 待记录到 docs/review.md（尚未创建）。
+- code review 待记录到 docs/review.md（尚未创建，模块 5、6 均未记录）。
+- 前端无自动化测试（未装 vitest），模块 6 靠浏览器手工验证；如需回归可在模块 8 前补。
 
 ## 决策摘要
 
@@ -90,3 +93,5 @@
 - D-003（模块 5）：`time_range` 由 api_client 换算成 `from_time = now - hours*3600` 传给上游；实测确认生效（24h→29、72h→80、168h→97、720h→97），故不采用后端按 `time_submitted` 过滤的备选方案。
 - D-004（模块 5）：export 复用 `collect_projects` 而非接受前端回传数据，保证导出与页面一致、防篡改、省大 payload。
 - D-005（模块 5）：API 客户端单例在 lifespan 中创建（非模块顶层），避免事件循环绑定问题，并保证进程退出前 `close()` 关闭连接池。
+- D-006（模块 6）：不引入 shadcn/ui，技能多选与表格分页用原生 React 手写。理由：shadcn 需额外初始化（CLI、components.json、路径别名），对学习项目增加不必要的间接层；手写组件约 340 行、逻辑可直读。偏离 `docs/plan.zh.md` 模块 6 原定的 Combobox/Table/Pagination 方案。
+- D-007（模块 6）：Vite 配置 `server.proxy` 把 `/api` 转发到 `http://localhost:8000`，`api.js` 里全部写相对路径。理由：开发期免 CORS 预检往返，且与生产（模块 8 让 FastAPI 挂载 `frontend/dist` 后同源）行为一致，无需切换 base URL。
