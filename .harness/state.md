@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-第 5 步（生成 → validate → review）—— 模块 1-4 已实现并通过单测，全量回归 38 passed；模块 4 待用户 review 确认后进入模块 5
+第 5 步（生成 → validate → review）—— 模块 1-5 已实现并通过单测，全量回归 59 passed；模块 5 已 review，待进入模块 6
 
 ## 需求一句话（Who / What / Why）
 
@@ -57,8 +57,8 @@
 - [x] 模块 1：后端基础（FastAPI 骨架 + /health）— 2 测试通过
 - [x] 模块 2：Freelancer API 客户端（`backend/services/api_client.py`）— 10 测试通过，commit b3480e7
 - [x] 模块 3：数据处理器（`backend/services/data_processor.py`）— 15 测试通过，commit 8b171e9
-- [x] 模块 4：Excel 生成器（`backend/services/excel_generator.py`）— 11 测试通过，待 review
-- [ ] 模块 5：API 路由（`backend/routes/`）
+- [x] 模块 4：Excel 生成器（`backend/services/excel_generator.py`）— 11 测试通过，commit 8b171e9
+- [x] 模块 5：API 路由（`backend/routes/`）— 12 测试通过（test_routes.py），全量 59 passed
 - [ ] 模块 6：前端结构（React + Vite）
 - [ ] 模块 7：图表集成（react-chartjs-2）
 - [ ] 模块 8：部署配置（Render）
@@ -75,10 +75,18 @@
 
 ## 下一步动作
 
-模块 4 已实现完成（TDD：先写 tests/test_excel_generator.py 见 ModuleNotFoundError，再实现，11 passed）。
-等待用户 review 确认，确认后进入模块 5：API 路由（/api/jobs、/api/search、/api/export）。
-遗留：study/python/06-模块3-data-processor.md 缺 ★2/★3/★4 三节（已口头讲完未落盘）。
+模块 5 已实现完成（TDD：先写 tests/test_routes.py 见模块缺失，再实现，12 passed），全量回归 59 passed。
+待用户 commit 确认后进入模块 6：前端结构（React + Vite）。
+
+遗留：
+- study/python/08-模块5-api-routes.md 已落盘（讲解走 guided-code-walkthrough）。
+- study/python/06-模块3-data-processor.md 缺 ★2/★3/★4 三节（已口头讲完未落盘）。
+- code review 待记录到 docs/review.md（尚未创建）。
 
 ## 决策摘要
 
 - D-001：数据源选 Freelancer.com 官方 API，排除 Upwork/Guru/WWR；产出物从 CLI 升级为 Web 应用。详见 `.harness/decisions.md`。
+- D-002（模块 5）：`SearchFilters` 用 dataclass 而非 Pydantic 模型，因为 search/export 需要共享同一组查询参数解析，避免两处声明 7 个 Query 参数导致定义漂移。
+- D-003（模块 5）：`time_range` 由 api_client 换算成 `from_time = now - hours*3600` 传给上游；实测确认生效（24h→29、72h→80、168h→97、720h→97），故不采用后端按 `time_submitted` 过滤的备选方案。
+- D-004（模块 5）：export 复用 `collect_projects` 而非接受前端回传数据，保证导出与页面一致、防篡改、省大 payload。
+- D-005（模块 5）：API 客户端单例在 lifespan 中创建（非模块顶层），避免事件循环绑定问题，并保证进程退出前 `close()` 关闭连接池。

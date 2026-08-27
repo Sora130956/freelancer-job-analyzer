@@ -103,10 +103,26 @@ class FreelancerAPIClient:
         budget_min: Optional[float] = None,
         budget_max: Optional[float] = None,
         project_type: Optional[str] = None,
+        time_range: Optional[int] = None,
         offset: int = 0,
         limit: int = 100,
     ) -> List[dict]:
-        """Search active projects. Returns the raw project dicts."""
+        """搜索在招项目，返回原始项目 dict 列表。
+
+        参数:
+            keywords: 关键词，映射到 API 的 query。
+            jobs: 技能标签 ID 列表，多个值重复传 jobs[]。
+            budget_min/budget_max: 预算区间；固定价走 min/max_price，
+                时薪走 min/max_hourly_rate（API 是两套参数名）。
+            project_type: "fixed" 或 "hourly"，None 表示全部。
+            time_range: 只要最近多少小时内发布的项目（24/72/168/720）。
+                API 没有「最近 N 小时」参数，只能换算成绝对时间戳 from_time，
+                即 now - hours*3600；None 表示不限时间，此时不传该参数。
+            offset/limit: 分页参数。API 单次最多返回 100 条，
+                要更多结果需要调用方按 offset 递增循环调用。
+        返回:
+            projects 数组；无结果时返回空列表。
+        """
         params: List[tuple] = [
             ("job_details", "true"),
             ("full_description", "true"),
@@ -121,6 +137,8 @@ class FreelancerAPIClient:
                 params.append(("jobs[]", str(job_id)))
         if project_type:
             params.append(("project_types[]", project_type))
+        if time_range:
+            params.append(("from_time", str(int(time.time()) - time_range * 3600)))
 
         # Hourly projects use hourly-rate params; fixed (or unspecified) use price params
         if project_type == "hourly":

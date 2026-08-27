@@ -124,6 +124,39 @@ async def test_fetch_projects_hourly_maps_to_hourly_rate_params():
 
 
 @pytest.mark.asyncio
+async def test_fetch_projects_maps_time_range_to_from_time():
+    """time_range（小时）必须换算成 from_time 时间戳传给 API。"""
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["url"] = request.url
+        return httpx.Response(200, json=_projects_payload())
+
+    client = _client_with(handler)
+    before = int(time.time())
+    await client.fetch_projects(time_range=24)
+    after = int(time.time())
+
+    from_time = int(captured["url"].params["from_time"])
+    assert before - 24 * 3600 <= from_time <= after - 24 * 3600
+
+
+@pytest.mark.asyncio
+async def test_fetch_projects_without_time_range_omits_from_time():
+    """不限发布时间时不应带 from_time 参数。"""
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["url"] = request.url
+        return httpx.Response(200, json=_projects_payload())
+
+    client = _client_with(handler)
+    await client.fetch_projects()
+
+    assert "from_time" not in captured["url"].params
+
+
+@pytest.mark.asyncio
 async def test_fetch_projects_raises_on_api_error():
     """Non-2xx responses must raise a clear error."""
 
