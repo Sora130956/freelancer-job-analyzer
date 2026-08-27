@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-第 5 步（生成 → validate → review）—— 后端模块 1-5 全量回归 59 passed；模块 6 前端已实现并通过浏览器 6 步手工验证，待进入模块 7
+第 5 步（生成 → validate → review）—— 后端模块 1-5 全量回归 59 passed；模块 6 前端结构、模块 7 图表集成均已实现并通过浏览器验证，待进入模块 8（Render 部署）
 
 ## 需求一句话（Who / What / Why）
 
@@ -60,7 +60,7 @@
 - [x] 模块 4：Excel 生成器（`backend/services/excel_generator.py`）— 11 测试通过，commit 8b171e9
 - [x] 模块 5：API 路由（`backend/routes/`）— 12 测试通过（test_routes.py），全量 59 passed
 - [x] 模块 6：前端结构（React + Vite）— 9 个文件，npm run build 通过，浏览器 6 步手工验证通过
-- [ ] 模块 7：图表集成（react-chartjs-2）
+- [x] 模块 7：图表集成（react-chartjs-2）— npm run build 通过（37 modules），浏览器确认两图渲染且随结果响应式变化
 - [ ] 模块 8：部署配置（Render）
 
 ## 需求文档
@@ -75,16 +75,19 @@
 
 ## 下一步动作
 
-模块 6 已实现完成（frontend/ 9 个文件），`npm run build` 通过（31 modules），浏览器 6 步手工验证全部通过：
-页面加载填充 3422 个技能标签、"scra" 模糊匹配、选中出芯片、搜索返回 49 条 3 页每页 20、
-切第 2 页无新网络请求（客户端分页成立）、`GET /api/export` 返回 200、刷新走 sessionStorage 缓存不重复请求。
-后端未改动，59 passed 仍有效。待用户 commit 确认后进入模块 7：图表集成（react-chartjs-2）。
+模块 6、7 均已实现完成并验证。模块 7 具体证据：`npm run build` 通过（37 modules，较模块 6 的 31 多 6 个 chart.js 相关模块）；
+搜索 "python" 后页面出现两张 canvas（各 668×320，非透明像素 47623 / 98928，证明确实绘制而非空白），
+搜索结果截图可见 Top 10 技能柱状图（Python/JavaScript/Web Scraping/Data Mining/…）与预算分布直方图（<$50…$1000+ 5 桶）；
+换关键词 "logo design" 再搜索，两张图表数据随之变化（Top 10 变为 Logo Design/Adobe Illustrator/…，预算分布 5 桶计数重排）——响应式重渲染成立；
+console 无报错。后端 59 passed 未受影响。
+
+待用户 commit 确认后进入模块 8：部署配置（Render）。
 
 遗留：
 - study/python/09-模块6-frontend.md 未写（用户明确表示暂不学习前端部分，跳过）。
 - study/python/06-模块3-data-processor.md 缺 ★2/★3/★4 三节（已口头讲完未落盘）。
 - code review 待记录到 docs/review.md（尚未创建，模块 5、6 均未记录）。
-- 前端无自动化测试（未装 vitest），模块 6 靠浏览器手工验证；如需回归可在模块 8 前补。
+- 前端无自动化测试（未装 vitest），模块 7 靠浏览器手工验证；如需回归可在模块 8 前补。
 
 ## 决策摘要
 
@@ -95,3 +98,4 @@
 - D-005（模块 5）：API 客户端单例在 lifespan 中创建（非模块顶层），避免事件循环绑定问题，并保证进程退出前 `close()` 关闭连接池。
 - D-006（模块 6）：不引入 shadcn/ui，技能多选与表格分页用原生 React 手写。理由：shadcn 需额外初始化（CLI、components.json、路径别名），对学习项目增加不必要的间接层；手写组件约 340 行、逻辑可直读。偏离 `docs/plan.zh.md` 模块 6 原定的 Combobox/Table/Pagination 方案。
 - D-007（模块 6）：Vite 配置 `server.proxy` 把 `/api` 转发到 `http://localhost:8000`，`api.js` 里全部写相对路径。理由：开发期免 CORS 预检往返，且与生产（模块 8 让 FastAPI 挂载 `frontend/dist` 后同源）行为一致，无需切换 base URL。
+- D-008（模块 7）：走 npm 安装 `react-chartjs-2@5.2.0` + `chart.js@4.4.7`（npmmirror 源规避 npmjs.org ECONNRESET）；图表组件里显式 `ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)`——chart.js v4 是 tree-shaking 的，未注册的 scale/element 会在运行时抛 "not a registered scale"。Top 10 切片在前端做（`Object.entries(...).slice(0,10)`），后端 `skills_frequency` 已降序返回；预算直方图不硬编码分桶、直接取后端 `budget_distribution` 的 label 顺序，避免两边分桶定义漂移（该 dict 由 `build_budget_distribution` 保证恒有 5 个区间）。空态口径与 ResultsTable 一致：无结果时整块图表区不渲染。

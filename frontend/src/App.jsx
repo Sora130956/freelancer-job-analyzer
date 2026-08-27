@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import FilterPanel from './components/FilterPanel'
 import ResultsTable from './components/ResultsTable'
 import ExportButton from './components/ExportButton'
+import SkillsBarChart from './components/SkillsBarChart'
+import BudgetHistogram from './components/BudgetHistogram'
 import { fetchJobs, searchJobs, DEFAULT_LIMIT } from './api'
 
 // 筛选条件的初始值。空串/null 在 api.js 里会被过滤掉，不会发给后端。
@@ -94,6 +96,15 @@ export default function App() {
           <p className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
             {error}
           </p>
+        )}
+
+        {/* 图表区：和 ResultsTable 一致的空态口径——无结果时整块不渲染。
+            数据直接来自后端算好的聚合字段，图表只负责画。 */}
+        {projects.length > 0 && (
+          <section className="grid gap-4 lg:grid-cols-2">
+            <SkillsBarChart frequency={result.skills_frequency} />
+            <BudgetHistogram distribution={result.budget_distribution} />
+          </section>
         )}
 
         <ResultsTable projects={projects} />
